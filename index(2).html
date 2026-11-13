@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Photobooth LDR</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>💞 Photobooth LDR</h1>
+    <p>Foto bareng dari dua tempat berbeda, hasilnya digabung dalam satu bingkai.</p>
+  </header>
+
+  <main class="wrap">
+
+    <!-- 1. HUBUNGKAN BERDUA -->
+    <section class="card" id="lobby">
+      <h2>1. Hubungkan berdua</h2>
+      <div class="lobby-grid">
+        <div class="lobby-box">
+          <h3>Buat ruang baru</h3>
+          <p>Kamu jadi tuan rumah (tampil di sisi kiri hasil foto), lalu kirim kode ke pasanganmu.</p>
+          <button id="btnHost" class="btn primary">Buat Ruang</button>
+        </div>
+        <div class="lobby-box">
+          <h3>Gabung ke ruang</h3>
+          <p>Punya kode dari pasanganmu? Masukkan di sini (tampil di sisi kanan).</p>
+          <div class="join-row">
+            <input id="roomInput" type="text" maxlength="5" placeholder="KODE" autocomplete="off" spellcheck="false">
+            <button id="btnJoin" class="btn primary">Gabung</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="shareBox" class="share hidden">
+        <div>Kode ruang: <strong id="roomCode">-----</strong></div>
+        <button id="btnCopy" class="btn secondary">🔗 Salin Link Undangan</button>
+      </div>
+
+      <p id="status" class="status">Belum terhubung. Pilih salah satu di atas.</p>
+      <p class="muted small">Pakai headset/earphone agar suara pasangan tidak menggema.</p>
+    </section>
+
+    <!-- 2. KAMERA -->
+    <section class="card camera-card">
+      <h2>2. Ambil foto</h2>
+      <div class="stage" id="stage">
+        <div class="pane pane-local">
+          <video id="localVideo" autoplay playsinline muted></video>
+          <span class="tag">Kamu</span>
+          <div class="wait" id="localWait">Kamera belum aktif</div>
+        </div>
+        <div class="pane pane-remote">
+          <video id="remoteVideo" autoplay playsinline></video>
+          <span class="tag">Pasangan</span>
+          <div class="wait" id="remoteWait">Menunggu pasangan…</div>
+        </div>
+        <div id="countdown" class="countdown" aria-live="assertive"></div>
+        <div id="shotInfo" class="shot-info"></div>
+        <div id="flash" class="flash"></div>
+      </div>
+      <div class="row center">
+        <button id="btnMic" class="btn secondary" disabled>🎤 Mic</button>
+        <button id="btnStart" class="btn primary" disabled>▶ Mulai Foto (berdua)</button>
+      </div>
+      <p class="muted small">Siapa pun boleh menekan Mulai Foto. Hitung mundur berjalan serentak di kedua perangkat.</p>
+      <div class="thumbs" id="thumbs"></div>
+    </section>
+
+    <!-- PENGATURAN -->
+    <section class="card">
+      <h2>Pengaturan <span class="muted small">(berlaku di perangkatmu; timer ikut perangkat yang menekan Mulai)</span></h2>
+      <div class="grid-settings">
+        <label>Timer hitung mundur pertama (detik)
+          <input type="number" id="timerSec" min="1" max="10" value="3">
+        </label>
+        <label>Jeda antar foto (detik)
+          <input type="number" id="gapSec" min="1" max="10" value="3">
+        </label>
+        <label>Susunan hasil
+          <select id="layout">
+            <option value="strip">Strip vertikal (4×1)</option>
+            <option value="grid">Grid 2×2</option>
+          </select>
+        </label>
+        <label>Teks bawah bingkai
+          <input type="text" id="caption" maxlength="30" value="Kita, walau jauh 💕" placeholder="Contoh: Kita Berdua 💕">
+        </label>
+        <label class="check">
+          <input type="checkbox" id="mirror" checked> Mode cermin (kameramu)
+        </label>
+        <label class="check">
+          <input type="checkbox" id="showDate" checked> Tampilkan tanggal
+        </label>
+      </div>
+
+      <h2>Pilih Bingkai</h2>
+      <div class="frames" id="frames">
+        <label class="frame-opt">
+          <input type="radio" name="frame" value="solid" checked>
+          <span class="swatch s-solid"></span><em>Warna Solid</em>
+        </label>
+        <label class="frame-opt">
+          <input type="radio" name="frame" value="retro">
+          <span class="swatch s-retro"></span><em>Retro</em>
+        </label>
+        <label class="frame-opt">
+          <input type="radio" name="frame" value="colorful">
+          <span class="swatch s-colorful"></span><em>Colorful</em>
+        </label>
+        <label class="frame-opt">
+          <input type="radio" name="frame" value="custom">
+          <span class="swatch s-custom">PNG</span><em>Upload Sendiri</em>
+        </label>
+      </div>
+
+      <div id="opt-solid" class="frame-extra">
+        <label>Warna bingkai <input type="color" id="solidColor" value="#ff7aa8"></label>
+      </div>
+      <div id="opt-custom" class="frame-extra hidden">
+        <label>Upload bingkai (PNG transparan)
+          <input type="file" id="customFile" accept="image/png,image/*">
+        </label>
+        <small>Bingkai ditempel di atas foto dan diregangkan ke ukuran hasil, jadi bagian foto harus <b>transparan</b>. Rasio hasil: strip ≈ 1080×2210 px, grid ≈ 2070×1190 px.</small>
+      </div>
+    </section>
+
+    <!-- HASIL -->
+    <section class="card result-card" id="resultCard">
+      <h2>Hasil Akhir</h2>
+      <p id="resultHint" class="muted">Belum ada foto. Ambil foto dulu ya!</p>
+      <canvas id="result" class="hidden"></canvas>
+      <div class="row center">
+        <button id="btnDownload" class="btn primary" disabled>⬇ Download Hasil Foto</button>
+        <button id="btnRetake" class="btn secondary" disabled>🔄 Ulangi</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    Video dikirim langsung antar perangkat (peer-to-peer). Server publik hanya dipakai untuk mempertemukan kalian berdua; foto tidak disimpan di mana pun.
+  </footer>
+
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
